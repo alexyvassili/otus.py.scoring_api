@@ -5,7 +5,13 @@ from fields import *
 from scoring import get_score, get_interests
 from constants import *
 
-# зачем нужен словарь контекста
+# Задание пытался реализовывать самостоятельно, не заглядывая в код Django
+# Плюсы этого скрипта - он работает
+# Минусы - не уверен что правильно разобрался с наследованием - (код ApiRequest.__new__ и
+# fields.py -> Field.__new__
+# - функция validate кажется как-то не так подхватывается, потому что приходится
+# писать self.validate(self, value) вместо self.validate(value)
+# зачем нужен словарь контекста я тоже не очень понял.
 
 
 class ApiRequest:
