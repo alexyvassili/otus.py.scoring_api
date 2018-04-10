@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import json
 import logging
 import uuid
 from optparse import OptionParser
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from constants import *
+from constants import OK, BAD_REQUEST, INTERNAL_ERROR, NOT_FOUND, ERRORS
 from api import method_handler
 
 

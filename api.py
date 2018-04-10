@@ -1,9 +1,12 @@
+# -*- coding: utf-8 -*-
 from _datetime import datetime
 import hashlib
 import functools
-from fields import *
+from fields import CharField, EmailField, PhoneField, BirthDayField, DateField
+from fields import Field, ArgumentsField, ClientIDsField, GenderField
 from scoring import get_score, get_interests
-from constants import *
+from constants import ADMIN_LOGIN, ADMIN_SALT, SALT, ERRORS, INVALID_REQUEST, OK, FORBIDDEN
+import logging
 
 # Задание пытался реализовывать самостоятельно, не заглядывая в код Django
 # Плюсы этого скрипта - он работает
@@ -123,12 +126,12 @@ def online_score_handler(request: MethodRequest, ctx, store):
     logging.info(f'HAS: {api_request.has}')
     ctx['has'] = api_request.has
     score = get_score(store,
-                     phone=api_request.phone,
-                     email=api_request.email,
-                     birthday=api_request.birthday,
-                     gender=api_request.gender,
-                     first_name=api_request.first_name,
-                     last_name=api_request.last_name)
+                      phone=api_request.phone,
+                      email=api_request.email,
+                      birthday=api_request.birthday,
+                      gender=api_request.gender,
+                      first_name=api_request.first_name,
+                      last_name=api_request.last_name)
     return OK, {"score": score}
 
 
