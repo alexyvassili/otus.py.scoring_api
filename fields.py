@@ -15,7 +15,7 @@ GENDERS = {
 class Field(type):
     def __new__(cls, required=False, nullable=True, **kwargs):
 
-        def validate(self, value):
+        def validate(value):
             raise NotImplementedError
 
         attrs = {}
@@ -45,6 +45,29 @@ class Field(type):
             self.value = value
         else:
             raise ValueError('Validating error:', value)
+
+
+class FieldObj:
+    def __init__(self, required=False, nullable=True):
+        self.required = required
+        self.nullable = nullable
+
+    def __get__(self, obj, objtype=None):
+        logging.info(f'get value {self.value}')
+        return self.value
+
+    def __set__(self, obj, value):
+        if value is None and (self.required or not self.nullable):
+            raise AttributeError('Value is required', value)
+        elif value is None and self.nullable:
+            self.value = value
+        elif self.validate(self, value):
+            self.value = value
+        else:
+            raise ValueError('Validating error:', value)
+
+    def validate(self, value):
+        raise NotImplementedError
 
 
 class CharField(Field):

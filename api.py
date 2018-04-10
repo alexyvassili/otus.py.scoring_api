@@ -19,7 +19,10 @@ import logging
 
 class ApiRequest:
     def __new__(cls, **kwargs):
+        def validate(self):
+            pass
         obj = super(ApiRequest, cls).__new__(cls)
+        setattr(obj, 'validate', validate)
         api_fields = []
         for field in cls.__dict__:
             if not field.startswith('__'):
@@ -54,10 +57,14 @@ class ApiRequest:
             raise AttributeError(f'This fields is required: {required_field_errs}')
         if bad_fields:
             raise TypeError(f'Bad fields: {bad_fields}')
+        logging.info('CALL REQUEST VALIDATE')
+        self.validate(self)
+
+
 
 
 class ClientsInterestsRequest(ApiRequest):
-    client_ids = ClientIDsField(required=True)
+    client_ids = ClientIDsField(required=True, nullable=False)
     date = DateField(required=False, nullable=True)
 
 
@@ -68,6 +75,20 @@ class OnlineScoreRequest(ApiRequest):
     phone = PhoneField(required=False, nullable=True)
     birthday = BirthDayField(required=False, nullable=True)
     gender = GenderField(required=False, nullable=True)
+
+    def validate(self):
+        validating_pairs = [
+            ('first_name', 'last_name'),
+            ('email', 'phone'),
+            ('birthday', 'gender'),
+        ]
+        if ('first_name' in self.has and 'last_name' in self.has) or \
+            ('email' in self.has and 'phone' in self.has) or \
+            ('birthday' in self.has and 'gender' in self.has):
+            return True
+        else:
+            raise AttributeError("Required at least one of this fields pars: ('first_name', 'last_name'), "
+                                 "('email', 'phone'), ('birthday', 'gender')")
 
 
 class MethodRequest(ApiRequest):
