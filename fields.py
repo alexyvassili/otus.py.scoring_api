@@ -12,45 +12,11 @@ GENDERS = {
 }
 
 
-class Field(type):
-    def __new__(cls, required=False, nullable=True, **kwargs):
-
-        def validate(value):
-            raise NotImplementedError
-
-        attrs = {}
-        newclass = type.__new__(cls, cls.__name__, (Field,), attrs)
-        setattr(newclass, 'validate', validate)
-        setattr(newclass, 'required', required)
-        setattr(newclass, 'nullable', nullable)
-        for name, value in cls.__dict__.items():
-            if not name.startswith('__'):
-                if callable(value):
-                    setattr(newclass, value.__name__, value)
-        return newclass
-
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __get__(self, obj, objtype=None):
-        logging.info(f'get value {self.value}')
-        return self.value
-
-    def __set__(self, obj, value):
-        if value is None and (self.required or not self.nullable):
-            raise AttributeError('Value is required', value)
-        elif value is None and self.nullable:
-            self.value = value
-        elif self.validate(self, value):
-            self.value = value
-        else:
-            raise ValueError('Validating error:', value)
-
-
-class FieldObj:
+class Field:
     def __init__(self, required=False, nullable=True):
         self.required = required
         self.nullable = nullable
+        self.value = None
 
     def __get__(self, obj, objtype=None):
         logging.info(f'get value {self.value}')
@@ -61,10 +27,9 @@ class FieldObj:
             raise AttributeError('Value is required', value)
         elif value is None and self.nullable:
             self.value = value
-        elif self.validate(self, value):
-            self.value = value
         else:
-            raise ValueError('Validating error:', value)
+            self.validate(value)
+            self.value = value
 
     def validate(self, value):
         raise NotImplementedError
@@ -74,28 +39,33 @@ class CharField(Field):
 
     def validate(self, value):
         logging.info('validating chars')
-        return type(value) == str
+        if not (type(value) == str):
+            raise ValueError('Char Field got non-string type')
 
 
 class ListField(Field):
 
     def validate(self, value):
         logging.info('validating list')
-        return type(value) == list
+        if not (type(value) == list):
+            raise ValueError('List Field got non-list type')
 
 
 class DictField(Field):
 
     def validate(self, value):
         logging.info('validating list')
-        return type(value) == dict
+        if not (type(value) == dict):
+            raise ValueError('Dict Field got non-dict type')
 
 
 class EmailField(CharField):
 
     def validate(self, value):
         logging.info('validating mail')
-        return super().validate(value) and '@' in value
+        super().validate(value)
+        if not ('@' in value):
+            raise ValueError("No '@' in Email Field")
 
 
 class PhoneField(Field):
@@ -103,48 +73,51 @@ class PhoneField(Field):
     def validate(self, value):
         logging.info('validating phone')
         value = str(value)
-        return len(value) == 11 and value[0] == '7'
+        if not (len(value) == 11):
+            raise ValueError('Phone Field must contain 11 numbers')
+        elif not value.isdigit():
+            raise ValueError('Phone Field must contain only digits')
+        elif not value.startswith('7'):
+            raise ValueError("Phone Field must starts with '7'")
 
 
 class DateField(CharField):
 
     def validate(self, value):
         logging.info('validating date')
-        if not super().validate(value):
-            return False
-        try:
-            datetime.strptime(value, "%d.%m.%Y").date()
-        except ValueError:
-            return False
-        return True
+        super().validate(value)
+        date = datetime.strptime(value, "%d.%m.%Y").date()
 
 
 class BirthDayField(DateField):
 
     def validate(self, value):
         logging.info('validating bthday')
-        if not super().validate(value):
-            return False
+        super().validate(value)
         value = datetime.strptime(value, "%d.%m.%Y").date()
         today = datetime.now().date()
-        return (today - value).days // 365 < 70
+        if not (today - value).days // 365 < 70:
+            raise ValueError('Incorrect date: (> 70 years old)')
 
 
 class GenderField(Field):
 
     def validate(self, value):
         logging.info('validating gender')
-        return value in (UNKNOWN, MALE, FEMALE)
+        if value not in (UNKNOWN, MALE, FEMALE):
+            raise ValueError('Unexpected gender')
 
 
 class ClientIDsField(ListField):
 
     def validate(self, value):
         logging.info('validating client ids')
-        return super().validate(value) and all(map(lambda x: type(x) is int, value))
+        super().validate(value)
+        if not all(map(lambda x: type(x) is int, value)):
+            raise ValueError('Cliend IDs may contains only integers')
 
 
 class ArgumentsField(DictField):
 
     def validate(self, value):
-        return super().validate(value)
+        super().validate(value)

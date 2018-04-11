@@ -8,59 +8,38 @@ from scoring import get_score, get_interests
 from constants import ADMIN_LOGIN, ADMIN_SALT, SALT, ERRORS, INVALID_REQUEST, OK, FORBIDDEN
 import logging
 
-# Задание пытался реализовывать самостоятельно, не заглядывая в код Django
-# Плюсы этого скрипта - он работает
-# Минусы - не уверен что правильно разобрался с наследованием - (код ApiRequest.__new__ и
-# fields.py -> Field.__new__
-# - функция validate кажется как-то не так подхватывается, потому что приходится
-# писать self.validate(self, value) вместо self.validate(value)
-# зачем нужен словарь контекста я тоже не очень понял.
-
 
 class ApiRequest:
-    def __new__(cls, **kwargs):
-        def validate(self):
-            pass
-        obj = super(ApiRequest, cls).__new__(cls)
-        setattr(obj, 'validate', validate)
-        api_fields = []
-        for field in cls.__dict__:
-            if not field.startswith('__'):
-                if hasattr(cls.__dict__[field], '__base__') and cls.__dict__[field].__base__ is Field:
-                    api_fields.append(field)
-                    obj.__dict__[field] = cls.__dict__[field]()
-                else:
-                    obj.__dict__[field] = cls.__dict__[field]
-        obj.__dict__['api_fields'] = api_fields
-        return obj
-
     def __init__(self, **kwargs):
+        self.api_fields = [k for k, v in self.__class__.__dict__.items()
+                           if isinstance(v, Field)]
+        logging.info(f'API FIELDS {self.api_fields}')
         bad_fields = []
         required_field_errs = []
         self.has = []
-        for field, cls in self.__dict__.items():
-            if field in self.api_fields:
-                if field in kwargs:
-                    value = kwargs[field]
-                    self.has.append(field)
-                else:
-                    value = None
-                try:
-                    logging.info(f'SET {field} TO {value}')
-                    setattr(self, field, value)
-                except ValueError:
-                    logging.info(f'FAILED TO SET {field} TO {value}')
-                    bad_fields.append(field)
-                except AttributeError:
-                    required_field_errs.append(field)
+        for field in self.api_fields:
+            if field in kwargs:
+                value = kwargs[field]
+                self.has.append(field)
+            else:
+                value = None
+            try:
+                logging.info(f'SET {field} TO {value}')
+                setattr(self, field, value)
+            except ValueError as e:
+                logging.info(f'FAILED TO SET {field} TO {value}')
+                bad_fields.append((field, e.args[0]))
+            except AttributeError:
+                required_field_errs.append(field)
         if required_field_errs:
             raise AttributeError(f'This fields is required: {required_field_errs}')
         if bad_fields:
             raise TypeError(f'Bad fields: {bad_fields}')
         logging.info('CALL REQUEST VALIDATE')
-        self.validate(self)
+        self.validate()
 
-
+    def validate(self):
+        return True
 
 
 class ClientsInterestsRequest(ApiRequest):
