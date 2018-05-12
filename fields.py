@@ -19,7 +19,7 @@ class Field:
         self.value = None
 
     def __get__(self, obj, objtype=None):
-        logging.info(f'get value {self.value}')
+        logging.debug(f'get value {self.value}')
         return self.value
 
     def __set__(self, obj, value):
@@ -38,7 +38,7 @@ class Field:
 class CharField(Field):
 
     def validate(self, value):
-        logging.info('validating chars')
+        logging.debug('validating chars')
         if not (type(value) == str):
             raise ValueError('Char Field got non-string type')
 
@@ -46,7 +46,7 @@ class CharField(Field):
 class ListField(Field):
 
     def validate(self, value):
-        logging.info('validating list')
+        logging.debug('validating list')
         if not (type(value) == list):
             raise ValueError('List Field got non-list type')
 
@@ -54,7 +54,7 @@ class ListField(Field):
 class DictField(Field):
 
     def validate(self, value):
-        logging.info('validating list')
+        logging.debug('validating list')
         if not (type(value) == dict):
             raise ValueError('Dict Field got non-dict type')
 
@@ -62,7 +62,7 @@ class DictField(Field):
 class EmailField(CharField):
 
     def validate(self, value):
-        logging.info('validating mail')
+        logging.debug('validating mail')
         super().validate(value)
         if not ('@' in value):
             raise ValueError("No '@' in Email Field")
@@ -71,7 +71,7 @@ class EmailField(CharField):
 class PhoneField(Field):
 
     def validate(self, value):
-        logging.info('validating phone')
+        logging.debug('validating phone')
         value = str(value)
         if not (len(value) == 11):
             raise ValueError('Phone Field must contain 11 numbers')
@@ -84,7 +84,7 @@ class PhoneField(Field):
 class DateField(CharField):
 
     def validate(self, value):
-        logging.info('validating date')
+        logging.debug('validating date')
         super().validate(value)
         date = datetime.strptime(value, "%d.%m.%Y").date()
 
@@ -92,7 +92,7 @@ class DateField(CharField):
 class BirthDayField(DateField):
 
     def validate(self, value):
-        logging.info('validating bthday')
+        logging.debug('validating bthday')
         super().validate(value)
         value = datetime.strptime(value, "%d.%m.%Y").date()
         today = datetime.now().date()
@@ -103,7 +103,7 @@ class BirthDayField(DateField):
 class GenderField(Field):
 
     def validate(self, value):
-        logging.info('validating gender')
+        logging.debug('validating gender')
         if value not in (UNKNOWN, MALE, FEMALE):
             raise ValueError('Unexpected gender')
 
@@ -111,7 +111,7 @@ class GenderField(Field):
 class ClientIDsField(ListField):
 
     def validate(self, value):
-        logging.info('validating client ids')
+        logging.debug('validating client ids')
         super().validate(value)
         if not all(map(lambda x: type(x) is int, value)):
             raise ValueError('Cliend IDs may contains only integers')

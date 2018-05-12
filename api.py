@@ -13,7 +13,7 @@ class ApiRequest:
     def __init__(self, **kwargs):
         self.api_fields = [k for k, v in self.__class__.__dict__.items()
                            if isinstance(v, Field)]
-        logging.info(f'API FIELDS {self.api_fields}')
+        logging.debug(f'API FIELDS {self.api_fields}')
         bad_fields = []
         required_field_errs = []
         self.has = []
@@ -24,10 +24,10 @@ class ApiRequest:
             else:
                 value = None
             try:
-                logging.info(f'SET {field} TO {value}')
+                logging.debug(f'SET {field} TO {value}')
                 setattr(self, field, value)
             except ValueError as e:
-                logging.info(f'FAILED TO SET {field} TO {value}')
+                logging.debug(f'FAILED TO SET {field} TO {value}')
                 bad_fields.append((field, e.args[0]))
             except AttributeError:
                 required_field_errs.append(field)
@@ -35,7 +35,7 @@ class ApiRequest:
             raise AttributeError(f'This fields is required: {required_field_errs}')
         if bad_fields:
             raise TypeError(f'Bad fields: {bad_fields}')
-        logging.info('CALL REQUEST VALIDATE')
+        logging.debug('CALL REQUEST VALIDATE')
         self.validate()
 
     def validate(self):
@@ -123,7 +123,7 @@ def method_handler(request, ctx, store):
 @login_required
 def online_score_handler(request: MethodRequest, ctx, store):
     api_request = OnlineScoreRequest(**request.arguments)
-    logging.info(f'HAS: {api_request.has}')
+    logging.debug(f'HAS: {api_request.has}')
     ctx['has'] = api_request.has
     score = get_score(store,
                       phone=api_request.phone,
@@ -138,6 +138,6 @@ def online_score_handler(request: MethodRequest, ctx, store):
 @login_required
 def clients_interests_handler(request: MethodRequest, ctx, store):
     api_request = ClientsInterestsRequest(**request.arguments)
-    logging.info(f'HAS: {api_request.has}')
+    logging.debug(f'HAS: {api_request.has}')
     ctx['has'] = api_request.has
     return OK, {cid: get_interests(store, cid) for cid in api_request.client_ids}
