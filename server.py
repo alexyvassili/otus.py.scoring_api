@@ -45,6 +45,9 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
                 except KeyError:
                     logging.info("EXCEPTION: UNEXPECTED API METHOD")
                     code = INVALID_REQUEST
+                except redis.exceptions.ConnectionError:
+                    logging.exception("REDIS CONNECTION ERROR: %s" % e)
+                    code = INTERNAL_ERROR
                 except Exception as e:
                     logging.exception("Unexpected error: %s" % e)
                     code = INTERNAL_ERROR
