@@ -4,108 +4,67 @@ import fields
 from store import Store
 from time import sleep
 
+from webtest import TestApp
+
+
+def cases(cases_list):
+    def deco(func):
+        def wrapper(self):
+            for case in cases_list:
+                func(self, case)
+
+        return wrapper
+    return deco
+
 
 class TestFields(unittest.TestCase):
-    def test_CharField_validate_incorrect_value(self):
+    @cases([5, dict(), list(), True])
+    def test_CharField_validate_incorrect_value(self, value):
         with self.assertRaises(ValueError):
-            fields.CharField.validate(fields.CharField(), 5)
-        with self.assertRaises(ValueError):
-            fields.CharField.validate(fields.CharField(), dict())
-        with self.assertRaises(ValueError):
-            fields.CharField.validate(fields.CharField(), list())
-        with self.assertRaises(ValueError):
-            fields.CharField.validate(fields.CharField(), True)
+            fields.CharField.validate(fields.CharField(), value)
 
     def test_CharField_validate_correct_value(self):
         self.assertTrue((fields.CharField.validate(fields.CharField(), '5') is None))
 
-    def test_ListField_validate_incorrect_value(self):
+    @cases([5, dict(), 'ab', True])
+    def test_ListField_validate_incorrect_value(self, value):
         with self.assertRaises(ValueError):
-            fields.ListField.validate(fields.ListField(), 5)
-        with self.assertRaises(ValueError):
-            fields.ListField.validate(fields.ListField(), dict())
-        with self.assertRaises(ValueError):
-            fields.ListField.validate(fields.ListField(), 'ab')
-        with self.assertRaises(ValueError):
-            fields.ListField.validate(fields.ListField(), True)
+            fields.ListField.validate(fields.ListField(), value)
 
     def test_ListField_validate_correct_value(self):
         self.assertTrue(fields.ListField.validate(fields.ListField(), [1, 2, 3]) is None)
 
-    def test_DictField_validate_incorrect_value(self):
+    @cases([5, list(), 'ab', True])
+    def test_DictField_validate_incorrect_value(self, value):
         with self.assertRaises(ValueError):
-            fields.DictField.validate(fields.DictField(), 5)
-        with self.assertRaises(ValueError):
-            fields.DictField.validate(fields.DictField(), list())
-        with self.assertRaises(ValueError):
-            fields.DictField.validate(fields.DictField(), 'ab')
-        with self.assertRaises(ValueError):
-            fields.DictField.validate(fields.DictField(), True)
+            fields.DictField.validate(fields.DictField(), value)
 
     def test_DictField_validate_correct_value(self):
         self.assertTrue(fields.DictField.validate(fields.DictField(),
                                                   {'name': 'Alexy', 'surname': 'Vassili'}) is None)
 
-    def test_EmailField_validate_incorrect_value(self):
+    @cases([5, list(), 'ab', True, 'ab.com', 'ab at ab.com'])
+    def test_EmailField_validate_incorrect_value(self, value):
         with self.assertRaises(ValueError):
-            fields.EmailField.validate(fields.EmailField(), 5)
-        with self.assertRaises(ValueError):
-            fields.EmailField.validate(fields.EmailField(), list())
-        with self.assertRaises(ValueError):
-            fields.EmailField.validate(fields.EmailField(), 'ab')
-        with self.assertRaises(ValueError):
-            fields.EmailField.validate(fields.EmailField(), True)
-        with self.assertRaises(ValueError):
-            fields.EmailField.validate(fields.EmailField(), 'ab.com')
-        with self.assertRaises(ValueError):
-            fields.EmailField.validate(fields.EmailField(), 'ab at ab.com')
+            fields.EmailField.validate(fields.EmailField(), value)
 
     def test_EmailField_validate_correct_value(self):
         self.assertTrue(fields.EmailField.validate(fields.EmailField(), 'petros@gmail.com') is None)
 
-    def test_PhoneField_validate_incorrect_value(self):
+    @cases([5, list(), 'ab', True, 89632223344, 7963222334, 789632223344,
+            '89632223344', '7963222334', '789632223344'])
+    def test_PhoneField_validate_incorrect_value(self, value):
         with self.assertRaises(ValueError):
-            fields.PhoneField.validate(fields.PhoneField(), 5)
-        with self.assertRaises(ValueError):
-            fields.PhoneField.validate(fields.PhoneField(), list())
-        with self.assertRaises(ValueError):
-            fields.PhoneField.validate(fields.PhoneField(), 'ab')
-        with self.assertRaises(ValueError):
-            fields.PhoneField.validate(fields.PhoneField(), True)
-        with self.assertRaises(ValueError):
-            # start with 8
-            fields.PhoneField.validate(fields.PhoneField(), 89632223344)
-        with self.assertRaises(ValueError):
-            # < 11 digits
-            fields.PhoneField.validate(fields.PhoneField(), 7963222334)
-        with self.assertRaises(ValueError):
-            # > 11 digits
-            fields.PhoneField.validate(fields.PhoneField(), 789632223344)
-        with self.assertRaises(ValueError):
-            # start with 8
-            fields.PhoneField.validate(fields.PhoneField(), '89632223344')
-        with self.assertRaises(ValueError):
-            # < 11 digits
-            fields.PhoneField.validate(fields.PhoneField(), '7963222334')
-        with self.assertRaises(ValueError):
-            # > 11 digits
-            fields.PhoneField.validate(fields.PhoneField(), '789632223344')
+            fields.PhoneField.validate(fields.PhoneField(), value)
 
     def test_PhoneField_validate_correct_value(self):
         self.assertTrue(fields.PhoneField.validate(fields.PhoneField(), '79637222999') is None)
         self.assertTrue(fields.PhoneField.validate(fields.PhoneField(), 79637222999) is None)
 
-    def test_DateField_validate_incorrect_value(self):
+    @cases(['08.05..2003', '08.052003', '08/05/2003', '08:05:2003', '08052003'])
+    def test_DateField_validate_incorrect_value(self, value):
         with self.assertRaises(ValueError):
-            fields.DateField.validate(fields.DateField(), '08.05..2003')
-        with self.assertRaises(ValueError):
-            fields.DateField.validate(fields.DateField(), '08.052003')
-        with self.assertRaises(ValueError):
-            fields.DateField.validate(fields.DateField(), '08/05/2003')
-        with self.assertRaises(ValueError):
-            fields.DateField.validate(fields.DateField(), '08:05:2003')
-        with self.assertRaises(ValueError):
-            fields.DateField.validate(fields.DateField(), '08052003')
+            fields.DateField.validate(fields.DateField(), value)
 
     def test_DateField_validate_correct_value(self):
         self.assertTrue(fields.DateField.validate(fields.DateField(), '08.05.2003') is None)
@@ -158,16 +117,6 @@ class TestFields(unittest.TestCase):
 
 from server import HOST, PORT
 from http.client import HTTPConnection
-
-
-def cases(cases_list):
-    def deco(func):
-        def wrapper(self):
-            for case in cases_list:
-                func(self, case)
-
-        return wrapper
-    return deco
 
 
 class TestHTTP(unittest.TestCase):
