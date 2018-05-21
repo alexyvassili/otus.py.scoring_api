@@ -4,8 +4,8 @@ import fields
 from store import Store
 from time import sleep
 
-from webtest import TestApp
 
+TEST_PORT = 10101
 
 def cases(cases_list):
     def deco(func):
@@ -116,18 +116,36 @@ class TestFields(unittest.TestCase):
 
 
 from server import HOST, PORT
+from threading import Thread
+from http.server import HTTPServer
 from http.client import HTTPConnection
+from server import MainHTTPHandler
 
 
 class TestHTTP(unittest.TestCase):
     host = HOST
 
-    port = PORT
+    port = TEST_PORT
 
     headers = {"Content-type": "application/json",
                "Accept": "text/plain"}
 
+    server = None
+    thread = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.server = HTTPServer((cls.host, cls.port), MainHTTPHandler)
+        cls.thread = Thread(target=cls.server.serve_forever)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.thread.join()
+
     def setUp(self):
+        print(self.host, self.port)
         self.conn = HTTPConnection(self.host, self.port, timeout=10)
 
     def tearDown(self):
