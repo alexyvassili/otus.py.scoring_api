@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
 import logging
@@ -45,7 +46,7 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
                 except KeyError:
                     logging.info("EXCEPTION: UNEXPECTED API METHOD")
                     code = INVALID_REQUEST
-                except redis.exceptions.ConnectionError:
+                except redis.exceptions.ConnectionError as e:
                     logging.exception("REDIS CONNECTION ERROR: %s" % e)
                     code = INTERNAL_ERROR
                 except Exception as e:

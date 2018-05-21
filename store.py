@@ -8,7 +8,7 @@ class Store:
         self.cache = dict()  # {'key': {'value': b"", 'timestamp': 0, 'cache_time': 0}}
         self.cache_time = cache_time
         self.retry = retry
-        self.store = redis.Redis(host='192.168.0.17', port=6379, db=0, socket_timeout=3)
+        self.store = redis.Redis(host='10.0.2.144', port=6379, db=0, socket_timeout=3)
         self.attempts = 0
 
     def do_store(self, command, *args):
